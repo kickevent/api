@@ -1,7 +1,10 @@
 package main
 
 import (
+    "fmt"
+    "encoding/base64"
     "github.com/gin-gonic/gin"
+    "github.com/franela/goreq"
 )
 
 func main() {
@@ -19,6 +22,9 @@ func main() {
     router.Run(":8080")
 }
 
+func base64Encode(str string) string {
+    return base64.StdEncoding.EncodeToString([]byte(str))
+}
 
 type Event struct {
     Event string `json:"event" binding:"required"`
@@ -26,8 +32,33 @@ type Event struct {
 }
 
 func (event *Event) get(c *gin.Context) {
+    // Connect to the database
+    req := goreq.Request{
+        Uri: "http://orientdb:2480/connect/kickevent",
+    }
+    req.AddHeader("Accept-Encoding", "gzip,deflate")
+    req.AddHeader("Authorization", fmt.Sprintf("Basic %s", base64Encode("root:0r13ntDB")))
+    res, err := req.Do()
+    if err != nil {
+        fmt.Println(err.Error())
+    }
+    body, _ := res.Body.ToString()
+    fmt.Println(body)
 
-    c.JSON(201, event)
+    // Getting database informations
+    req = goreq.Request{
+        Uri: "http://orientdb:2480/database/kickevent",
+    }
+    req.AddHeader("Accept-Encoding", "gzip,deflate")
+    req.AddHeader("Authorization", fmt.Sprintf("Basic %s", base64Encode("root:0r13ntDB")))
+    res, err = req.Do()
+    if err != nil {
+        fmt.Println(err.Error())
+    }
+    body, _ = res.Body.ToString()
+    fmt.Println(body)
+
+    c.JSON(201, body)
 }
 
 func (event *Event) post(c *gin.Context) {
