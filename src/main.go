@@ -22,43 +22,20 @@ func main() {
     router.Run(":8080")
 }
 
-func base64Encode(str string) string {
-    return base64.StdEncoding.EncodeToString([]byte(str))
-}
-
 type Event struct {
     Event string `json:"event" binding:"required"`
     Name  string `json:"event1" binding:"required"`
 }
 
 func (event *Event) get(c *gin.Context) {
-    // Connect to the database
-    req := goreq.Request{
-        Uri: "http://orientdb:2480/connect/kickevent",
+    client := Client{
+        Uri: "http://orientdb:2480",
+        Username: "root",
+        Password: "0r13ntDB",
     }
-    req.AddHeader("Accept-Encoding", "gzip,deflate")
-    req.AddHeader("Authorization", fmt.Sprintf("Basic %s", base64Encode("root:0r13ntDB")))
-    res, err := req.Do()
-    if err != nil {
-        fmt.Println(err.Error())
-    }
-    body, _ := res.Body.ToString()
-    fmt.Println(body)
-
-    // Getting database informations
-    req = goreq.Request{
-        Uri: "http://orientdb:2480/database/kickevent",
-    }
-    req.AddHeader("Accept-Encoding", "gzip,deflate")
-    req.AddHeader("Authorization", fmt.Sprintf("Basic %s", base64Encode("root:0r13ntDB")))
-    res, err = req.Do()
-    if err != nil {
-        fmt.Println(err.Error())
-    }
-    body, _ = res.Body.ToString()
-    fmt.Println(body)
-
-    c.JSON(201, body)
+    res := client.Request("GET", "database/kickevent")
+    fmt.Println(res)
+    c.JSON(201, res)
 }
 
 func (event *Event) post(c *gin.Context) {
@@ -67,4 +44,28 @@ func (event *Event) post(c *gin.Context) {
 
 func (event *Event) delete(c *gin.Context) {
     c.JSON(201, "test")
+}
+
+// Client OrientDB à sortir dans un package différent
+func base64Encode(str string) string {
+    return base64.StdEncoding.EncodeToString([]byte(str))
+}
+
+type Client struct {
+    Uri      string
+    Username string
+    Password string
+}
+
+func (c *Client) Request(method string, uri string) (string) {
+    req := goreq.Request{
+        Method: method,
+        Uri: fmt.Sprintf("%s/%s", c.Uri, uri),
+    }
+    req.AddHeader("Accept-Encoding", "gzip,deflate")
+    req.AddHeader("Authorization", fmt.Sprintf("Basic %s", base64Encode(fmt.Sprintf("%s:%s", c.Username, c.Password))))
+    res, _ := req.Do()
+    body, _ := res.Body.ToString()
+
+    return body
 }
