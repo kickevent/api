@@ -1,0 +1,19 @@
+orientdb:
+    image: joaodubas/orientdb
+    ports:
+        - "2424:2424"
+        - "2480:2480"
+
+app:
+    build: ./src
+    links:
+        - orientdb
+    volumes:
+        - ./src:/app/
+    ports:
+        - "8080:8080"
+    expose:
+        - "8080"
+    environment:
+        KICKEVENT_ORIENTDB_USER:
+        KICKEVENT_ORIENTDB_PWD:
