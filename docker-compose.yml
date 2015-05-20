@@ -11,7 +11,7 @@ app:
     links:
         - orientdb
     volumes:
-        - ./src:/app/
+        - ./src:/go/src/github.com/kickevent/event-api/
     ports:
         - "8080:8080"
     expose:
