@@ -2,9 +2,8 @@ package main
 
 import (
     "fmt"
-    "encoding/base64"
+    "github.com/kickevent/event-api/orientdb"
     "github.com/gin-gonic/gin"
-    "github.com/franela/goreq"
 )
 
 func main() {
@@ -28,7 +27,7 @@ type Event struct {
 }
 
 func (event *Event) get(c *gin.Context) {
-    client := Client{
+    client := orientdb.Client{
         Uri: "http://orientdb:2480",
         Username: "root",
         Password: "0r13ntDB",
@@ -47,25 +46,3 @@ func (event *Event) delete(c *gin.Context) {
 }
 
 // Client OrientDB à sortir dans un package différent
-func base64Encode(str string) string {
-    return base64.StdEncoding.EncodeToString([]byte(str))
-}
-
-type Client struct {
-    Uri      string
-    Username string
-    Password string
-}
-
-func (c *Client) Request(method string, uri string) (string) {
-    req := goreq.Request{
-        Method: method,
-        Uri: fmt.Sprintf("%s/%s", c.Uri, uri),
-    }
-    req.AddHeader("Accept-Encoding", "gzip,deflate")
-    req.AddHeader("Authorization", fmt.Sprintf("Basic %s", base64Encode(fmt.Sprintf("%s:%s", c.Username, c.Password))))
-    res, _ := req.Do()
-    body, _ := res.Body.ToString()
-
-    return body
-}
