@@ -2,6 +2,7 @@ package orientdb
 
 import (
     "fmt"
+    "encoding/json"
     "encoding/base64"
     "github.com/franela/goreq"
 )
@@ -16,15 +17,26 @@ type Client struct {
     Password string
 }
 
-func (c *Client) Request(method string, uri string) (string) {
+type Body interface {
+}
+
+func (c *Client) RequestWithBody(method string, uri string, body Body) (Body) {
     req := goreq.Request{
         Method: method,
         Uri: fmt.Sprintf("%s/%s", c.Uri, uri),
+        Body: body,
     }
     req.AddHeader("Accept-Encoding", "gzip,deflate")
     req.AddHeader("Authorization", fmt.Sprintf("Basic %s", base64Encode(fmt.Sprintf("%s:%s", c.Username, c.Password))))
     res, _ := req.Do()
-    body, _ := res.Body.ToString()
+    resbody, _ := res.Body.ToString()
+    src_json := []byte(resbody)
+    var jsonresbody interface{}
+    _ = json.Unmarshal(src_json, &jsonresbody)
+    
+    return jsonresbody
+}
 
-    return body
+func (c *Client) Request(method string, uri string) (Body) {
+    return c.RequestWithBody(method, uri, nil)
 }
